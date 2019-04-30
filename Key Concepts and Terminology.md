@@ -74,6 +74,40 @@ $$
 log\pi_\theta(s,a)=log[P_\theta(s)]_a
 $$
 
+## 3.2.2 Diagonal Gaussian Policies
+
+一个多元高斯分布（或者说多元正态分布）由一个均值向量$\mu$和一个协方差矩阵$\Sigma$描述。对角高斯分布是一个特例，它的协方差矩阵只有对角项有元素，所以我们能用一个向量表示它。
+
+一个对角高斯策略总是用一个神经网络将观测（状态）映射为动作均值$\mu_\theta(s)$，而协方差矩阵有两种方式来表示。
+
+**第一种**：用一个单独的向量表示对数标准差$log\sigma$，它并不是状态$s$的函数，只是单独的参数（spinning up中的VPG，TRPO和PPO都使用了这种方式实现）。
+
+**第二种**：用一个神经网络将状态映射为对数标准差$log\sigma_\theta(s)$，可以和平均值网络共享一些层。
+
+注意在这两种方式下我们都输出对数标准差而不是标准差，因为对数标准差可以是$(-\infty,+\infty)$中的任何值，而标准差必须是非负的，如果不需要这些约束训练参数会更容易，标准差可以从对数标准差里求指数而来，所以我们这样做不会损失任何表示。
+
+**Sampling**(采样)：给定均值动作$\mu_\theta(s)$和标准差$\sigma_\theta(s)$，一个来自球面高斯函数的噪声向量$z$（$z\sim N(0, I)$），一个动作采样可以如下计算：
+$$
+a=\mu_\theta(s)+\sigma_\theta(s)\odot z
+$$
+$\odot$定义为两个向量的点积，标准框架中内置了方法去计算噪声向量，像[tf.random_normal](<https://www.tensorflow.org/api_docs/python/tf/random_normal>)，或者你可以提供均值和标准差直接使用 [tf.distributions.Normal](https://www.tensorflow.org/api_docs/python/tf/distributions/Normal) 来采样
+
+**Log-Likelihood**(对数似然)：一个$k$维的动作，一个均值$u=\mu_\theta(s)$和标准差$\sigma=\sigma_\theta(s)$的对角高斯策略形成的对数似然为：
+$$
+\log \pi_{\theta}(a | s)=-\frac{1}{2}\left(\sum_{i=1}^{k}\left(\frac{\left(a_{i}-\mu_{i}\right)^{2}}{\sigma_{i}^{2}}+2 \log \sigma_{i}\right)+k \log 2 \pi\right)
+$$
+
+> 推导：对某一个状态$s$，采样某一维动作$a_i$的概率为：
+> $$
+> \pi_\theta(s,a_i)=\frac{1}{\sqrt{2\pi}\sigma_i}e^{-\frac{(\mu_\theta(s)-a_i)^2}{2\sigma^2}}
+> $$
+> 其中$\mu_\theta(s)$为神经网络映射的某一维动作均值$\mu_i$
+>
+> $k$维动作的联合概率（对角协方差表示了独立）为：
+> $$
+> \pi_\theta(s,a)=\prod_{i=1}^{k}\pi_\theta(s,a_i)=\prod_{i=1}^{k}\frac{1}{\sqrt{2\pi}\sigma_i}e^{-\frac{(\mu_i-a_i)^2}{2\sigma^2}}
+> $$
+> 对其求对数可得
 
 ## 4.Trajectories
 
@@ -188,4 +222,8 @@ $$
 a^*(s)=argmax_aQ^*(s,a)
 $$
 注意：可能有多个动作能最大化$Q^*(s,a)$，在这种情况下，他们都是最优的，最优策略可以选择它们中的任何一个，但总是存在一个最优策略确定性的选择一个动作。
+
+## 9. Bellman Equations
+
+这四种值函数
 
