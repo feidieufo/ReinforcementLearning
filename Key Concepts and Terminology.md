@@ -33,8 +33,8 @@ $$
 $$
 \begin{aligned}
 \begin{split}
-a_t&=\mu(s_t)\\
-a_t&=\pi(\cdot|s_t)
+a_t&=\mu_\theta(s_t)\\
+a_t&=\pi_\theta(\cdot|s_t)
 \end{split}
 \end{aligned}
 $$
@@ -63,7 +63,7 @@ actions = tf.layers.dense(net, units=act_dim, activation=None)
 
 - 计算相应动作的log 似然，$log\pi_\theta(a_t|s_t)$
 
-### 3.2.1 **Categorical Policies**
+#### 3.2.1 **Categorical Policies**
 
 一个分类策略像一个离散动作的分类器，为分类策略构建神经网络的方法和为分类器构建神经网络的方法一样：输入是观测，紧接着是一些层（可能是卷积层或者是全连接层，这依赖于输入的种类），然后你有一个最终的线性层给出每个动作的对数，之后跟随一个softmax将对数转移为概率。
 
@@ -74,7 +74,7 @@ $$
 log\pi_\theta(s,a)=log[P_\theta(s)]_a
 $$
 
-## 3.2.2 Diagonal Gaussian Policies
+#### 3.2.2 Diagonal Gaussian Policies
 
 一个多元高斯分布（或者说多元正态分布）由一个均值向量$\mu$和一个协方差矩阵$\Sigma$描述。对角高斯分布是一个特例，它的协方差矩阵只有对角项有元素，所以我们能用一个向量表示它。
 
@@ -159,9 +159,8 @@ $$
 
 为了谈论期望return，我们首先不得不讨论轨迹的概率分布。
 
-假定环境的转移
+假定环境的转移和策略都是随机的，在这种情况下，T-step 轨迹的概率是：
 
-和策略都是随机的，在这种情况下，T-step 轨迹的概率是：
 $$
 P(\tau|\pi)=\rho_0(s_0)\prod_{t=0}^{T-1}P(s_{t+1}|s_t,a_t)\pi(a_t|s_t)
 $$
@@ -225,5 +224,35 @@ $$
 
 ## 9. Bellman Equations
 
-这四种值函数
+这四种值函数都遵守一种特殊的自治方程叫做**Bellman equations**(贝尔曼方程)，贝尔曼方程的基本思想如下：
 
+> 起始点的价值是你从那儿获得的期望回报，加上你到达的下一个点的价值。
+
+在线策略值函数的贝尔曼方程是：
+$$
+\begin{aligned} 
+V^{\pi}(s) &=\underset{a\sim\pi, s^{\prime} \sim P}{\mathrm{E}}\left[r(s, a)+\gamma V^{\pi}\left(s^{\prime}\right)\right] \\
+Q^{\pi}(s, a) &=\underset{s^{\prime} \sim P}{\mathrm{E}}\left[r(s, a)+\gamma \underset{a^{\prime} \sim \pi}{\mathrm{E}}\left[Q^{\pi}\left(s^{\prime}, a^{\prime}\right)\right]\right] 
+\end{aligned}
+$$
+$s^{\prime}\sim P$是$s^{\prime}\sim P(\cdot|s,a)$的缩写，表示下一个状态$s^{\prime}$是由环境的转移规则采样而来，$a\sim\pi$是$a\sim \pi(\cdot|s)$的缩写，$a^{\prime}\sim \pi(\cdot|s^{\prime})$的缩写
+
+最优值函数的贝尔曼方程如下：
+$$
+\begin{aligned} 
+V^{*}(s)&=\underset{a}{max}\underset{s^{\prime}\sim P}{\mathrm{E}}[r(s,a)+\gamma V^{*}(s^{\prime})]\\
+Q^{*}(s,a)&=\underset{s^{\prime} \sim P}{\mathrm{E}}\left[r(s,a)+\underset{a^{\prime}}{max}[\gamma Q^{*}(s^{\prime},a^{\prime})]\right]
+\end{aligned}
+$$
+在线策略值函数的贝尔曼方程和最优值函数的贝尔曼方程的关键不同在于是否有$max$操作符，这反映了智能体在选择动作时，为了最优化动作，它不得不挑选能让值最大化的动作。
+
+## 10. Advantage Functions
+
+有时候在RL中我们不需要描述一个动作在绝对意义上有多好，只需要描述它比平均行为好多少。也就是说，我们想知道这种行为的相对优势。我们用 **advantage function**(优势函数)这个概念来描述它。
+
+与策略$\pi$相关的优势函数$A^\pi(s,a)$描述了在状态$s$下采取动作$a$有多好，相对于在策略$\pi(\cdot|s)$下随机的采取一个动作。数学上，优势函数定义为：
+$$
+A^\pi(s,a)=Q^\pi(s,a)-V^\pi(s)
+$$
+
+> 优势函数在策略梯度法中很重要。
