@@ -1,5 +1,11 @@
 # Key Concepts and Terminology
 
+![../_images/rl_diagram_transparent_bg.png](https://spinningup.openai.com/en/latest/_images/rl_diagram_transparent_bg.png)
+
+RL(强化学习)的主要特征是智能体和环境，环境是智能体交互的世界，在每一步的交互中，智能体看到（可能是部分的看到）世界状态的观测，然后决定采取的行动。环境随着智能体的行动而改变，也可能随着自己改变。
+
+智能体能感知到来自环境的**reward**(奖励)信号,这是一个告诉它当前世界状态好坏的数字，智能体的目标是最大化当前的累积奖励，叫做**return**，强化学习是让智能体学习行为去获得它目标的学习方法。
+
 ## 1.States and Observations
 
 **State**(状态)s是对世界状态的完整描述，对状态来说世界没有隐藏的信息。**Observation**(观测)是对状态的部分描述，可能忽略了一些信息。
@@ -32,10 +38,8 @@ $$
 我们通常用$\theta$和$\phi$来表示策略的参数，然后将其作为策略符号的下表来强调联系：
 $$
 \begin{aligned}
-\begin{split}
 a_t&=\mu_\theta(s_t)\\
 a_t&=\pi_\theta(\cdot|s_t)
-\end{split}
 \end{aligned}
 $$
 
@@ -149,7 +153,7 @@ $$
 $$
 R(\tau)=\sum_{t=0}^\infty \gamma^tr_t
 $$
-折扣因子在直观上和数学上是便利的，直觉上来说：现在的现金比以后的现金好，数学上：一个无穷长度的奖励累加和可能不会收敛到一个有限值，且在方程中很难处理。但是有折扣因子且处于合理条件下，无穷和收敛。
+折扣因子在直观上和数学上是便利的，直觉上来说：现在的现金比以后的现金好，数学上：一个无穷长度的奖励累加和可能不会收敛到一个有限值，且在方程中很难处理。但是有折扣因子且处于合理条件下，无穷和会收敛。
 
 > 在RL的形式主义中，这两种return公式的界限是相当明显的，而深度RL尝试去模糊这个界限——举个例子，我们常常建立算法去优化未折扣return，但是使用折扣因子去评估**value functions**(值函数)
 
@@ -226,25 +230,68 @@ $$
 
 这四种值函数都遵守一种特殊的自治方程叫做**Bellman equations**(贝尔曼方程)，贝尔曼方程的基本思想如下：
 
-> 起始点的价值是你从那儿获得的期望回报，加上你到达的下一个点的价值。
+> 起始点的价值是你从那儿获得的期望奖励，加上你到达的下一个点的价值。
 
 在线策略值函数的贝尔曼方程是：
 $$
 \begin{aligned} 
-V^{\pi}(s) &=\underset{a\sim\pi, s^{\prime} \sim P}{\mathrm{E}}\left[r(s, a)+\gamma V^{\pi}\left(s^{\prime}\right)\right] \\
-Q^{\pi}(s, a) &=\underset{s^{\prime} \sim P}{\mathrm{E}}\left[r(s, a)+\gamma \underset{a^{\prime} \sim \pi}{\mathrm{E}}\left[Q^{\pi}\left(s^{\prime}, a^{\prime}\right)\right]\right] 
+V^{\pi}(s) &=\underset{a\sim\pi, s^{\prime} \sim P}{\mathrm{E}}\left[r(s, a, s^{\prime})+\gamma V^{\pi}\left(s^{\prime}\right)\right] \\
+Q^{\pi}(s, a) &=\underset{s^{\prime} \sim P}{\mathrm{E}}\left[r(s, a, s^{\prime})+\gamma \underset{a^{\prime} \sim \pi}{\mathrm{E}}\left[Q^{\pi}\left(s^{\prime}, a^{\prime}\right)\right]\right] 
 \end{aligned}
 $$
 $s^{\prime}\sim P$是$s^{\prime}\sim P(\cdot|s,a)$的缩写，表示下一个状态$s^{\prime}$是由环境的转移规则采样而来，$a\sim\pi$是$a\sim \pi(\cdot|s)$的缩写，$a^{\prime}\sim \pi(\cdot|s^{\prime})$的缩写
 
+> 推导：将$V^\pi(s)$展开
+> $$
+> \begin{aligned} 
+> V^\pi(s)&=E_{\tau\sim\pi}[R(\tau)|s_0=s]\\
+> &=E_\pi[\sum_{t=0}^{\infty}\gamma^tr_t|s_0=s]\\
+> &=E_\pi[r_0+\sum_{t=1}^{\infty}\gamma^tr_t|s_0=s]\\
+> &=E_\pi[r_0|s_0=s]+E_\pi[\sum_{t=1}^{\infty}\gamma^tr_t|s_0=s]\\
+> &=\sum_{a}\pi(a|s)\sum_{s^{\prime}}p(s^{\prime}|s,a)r(s,a,s^{\prime})+\sum_{a}\pi(a|s)\sum_{s^{\prime}}p(s^{\prime}|s,a)\gamma E_{\pi}[\sum_{t=0}^{\infty}\gamma^tr_{t+1}|s_1=s^{\prime}]\\
+> &=\underset{a\sim\pi, s^{\prime} \sim P}{E}\left[r(s, a, s^{\prime})+\gamma V^{\pi}\left(s^{\prime}\right)\right] 
+> \end{aligned}
+> $$
+> 同理：将$Q^\pi(s,a)$展开
+> $$
+> \begin{aligned}
+> Q^\pi(s,a)&=E_\pi[\sum_{t=0}^{\infty}\gamma^tr_t|s_0=s,a_0=a]\\
+> &=E_\pi[r_0+\sum_{t=1}^{\infty}\gamma^tr_t|s_0=s,a_0=a]\\
+> &=E_\pi[r_0|s_0=s,a_0=a]+E_\pi[\sum_{t=1}^{\infty}\gamma^tr_t|s_0=s,a_0=a]\\
+> &=\sum_{s^{\prime}}p(s^{\prime}|s,a)r(s,a,s^{\prime})+\sum_{s^{\prime}}p(s^{\prime}|s,a)\sum_{a^\prime}\gamma E_\pi[\sum_{t=0}^{\infty}\gamma^tr_{t+1}|s_1=s^\prime,a_1=a^\prime]\\
+> &=E_{s^{\prime}\sim p}[r(s,a,s^{\prime})+E_{a^\prime\sim\pi}\gamma Q(s^\prime,a^\prime)]
+> \end{aligned}
+> $$
+> 
+
 最优值函数的贝尔曼方程如下：
 $$
 \begin{aligned} 
-V^{*}(s)&=\underset{a}{max}\underset{s^{\prime}\sim P}{\mathrm{E}}[r(s,a)+\gamma V^{*}(s^{\prime})]\\
-Q^{*}(s,a)&=\underset{s^{\prime} \sim P}{\mathrm{E}}\left[r(s,a)+\underset{a^{\prime}}{max}[\gamma Q^{*}(s^{\prime},a^{\prime})]\right]
+V^{*}(s)&=\underset{a}{max}\underset{s^{\prime}\sim P}{\mathrm{E}}[r(s,a,s^{\prime})+\gamma V^{*}(s^{\prime})]\\
+Q^{*}(s,a)&=\underset{s^{\prime} \sim P}{\mathrm{E}}\left[r(s,a,s^{\prime})+\underset{a^{\prime}}{max}[\gamma Q^{*}(s^{\prime},a^{\prime})]\right]
 \end{aligned}
 $$
 在线策略值函数的贝尔曼方程和最优值函数的贝尔曼方程的关键不同在于是否有$max$操作符，这反映了智能体在选择动作时，为了最优化动作，它不得不挑选能让值最大化的动作。
+
+> 推导：
+> $$
+> \begin{aligned} 
+> V^{*}(s)&=max_a[Q^{*}(s,a)]\\
+> &=max_a\left[E_{\pi^{*}}[r_0+\sum_{t=1}^{\infty}\gamma^tr_t|s_0=s,a_0=a]\right]\\
+> &=max_a\left[E_{s^\prime\sim p}\left[r(s,a,s^{\prime})+\gamma E_{\pi^{*}}\left[\sum_{t=0}^{\infty}\gamma^tr_{t+1}|s_1=s^{\prime}\right]\right]\right]\\
+> &=max_a\left[E_{s^\prime\sim p}[r(s,a,s^{\prime})+\gamma V^{*}(s^\prime)t]\right]\\
+> \end{aligned}
+> $$
+
+
+
+> $$
+> \begin{aligned} 
+> Q^{*}(s,a)&=E_{s^\prime\sim p}\left[r(s,a,s^{\prime})+\gamma V^{*}(s^\prime)\right]\\
+> &=E_{s^\prime\sim p}\left[r(s,a,s^{\prime})+\gamma max_{a^{\prime}}[Q^{*}(s^{\prime},a^{\prime})]\right]
+> \end{aligned}
+> $$
+
 
 ## 10. Advantage Functions
 
