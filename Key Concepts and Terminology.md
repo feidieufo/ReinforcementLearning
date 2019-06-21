@@ -174,9 +174,9 @@ J(\pi)=\int_\tau P(\tau|\pi)R(\tau)=E_{\tau\sim\pi}[R(\tau)]
 $$
 关键的优化问题可以表示为：
 $$
-\pi^*=argmaxJ_\pi(\pi)
+\pi^\ast=argmaxJ_\pi(\pi)
 $$
-$\pi^*$表示最优化策略
+$\pi^\ast$表示最优化策略
 
 ## 7. Value Functions
 
@@ -194,17 +194,16 @@ $\pi^*$表示最优化策略
    Q^\pi(s,a)=E_{\tau\sim\pi}[R(\tau)|s_0=s,a_0=a]
    $$
    
-3. **Optimal Value Function**(最优值函数)，$V^*(s)$，当你在状态s开始之后根据optimal policy(最优策略)所获得的期望return:
+3. **Optimal Value Function**(最优值函数)，$V^\ast(s)$，当你在状态s开始之后根据optimal policy(最优策略)所获得的期望return:
    $$
-   V^*(s)=max_\pi(E_{\tau\sim\pi}[R(\tau)|s_0=s])
+   V^\ast(s)=max_\pi(E_{\tau\sim\pi}[R(\tau)|s_0=s])
    $$
 
-4. **Optimal Action-Value Function**(最优动作值函数)，$Q^*(s,a)$，当你在状态$s$开始，做出任意的动作$a$，之后根据最优策略做出动作而获得的期望return：
+4. **Optimal Action-Value Function**(最优动作值函数)，$Q^\ast(s,a)$，当你在状态$s$开始，做出任意的动作$a$，之后根据最优策略做出动作而获得的期望return：
    $$
-   Q^*(s,a)=max_\pi(E_{\tau\sim\pi}[R(\tau)|s_0=s,a_0=a])
+   Q^\ast(s,a)=max_\pi(E_{\tau\sim\pi}[R(\tau)|s_0=s,a_0=a])
    $$
    
-
 > 当我们讨论值函数时，如果我们不考虑时间依赖，我们意思是无限长度的折扣return。值函数作为有限长度的非折扣return需要以时间作为参数。
 
 > 在值函数和动作值函数之间有两个关键的联系：
@@ -213,18 +212,18 @@ $\pi^*$表示最优化策略
 > $$
 >
 > $$
-> V^*(s)=max_aQ^*(s,a)
+> V^\ast(s)=max_aQ^\ast(s,a)
 > $$
 
 ## 8. The Optimal Q-Function and the Optimal Action
 
-在最优动作值函数$Q^*(s,a)$和最优策略下的动作选择之间有着重要的联系，通过定义，$Q^*(s,a)$意思为开始在状态$s$，采取任意的动作$a$，之后永远按照最优策略所获得的期望return。
+在最优动作值函数$Q^\ast(s,a)$和最优策略下的动作选择之间有着重要的联系，通过定义，$Q^\ast(s,a)$意思为开始在状态$s$，采取任意的动作$a$，之后永远按照最优策略所获得的期望return。
 
-在$s$下的最优策略将选择一个能最大化以状态s开始的期望return的动作，如果我们有$Q^*$，我们可以直接获得最优动作$a^*(s)$通过：
+在$s$下的最优策略将选择一个能最大化以状态s开始的期望return的动作，如果我们有$Q^\ast$，我们可以直接获得最优动作$a^\ast(s)$通过：
 $$
-a^*(s)=argmax_aQ^*(s,a)
+a^\ast(s)=argmax_aQ^\ast(s,a)
 $$
-注意：可能有多个动作能最大化$Q^*(s,a)$，在这种情况下，他们都是最优的，最优策略可以选择它们中的任何一个，但总是存在一个最优策略确定性的选择一个动作。
+注意：可能有多个动作能最大化$Q^\ast(s,a)$，在这种情况下，他们都是最优的，最优策略可以选择它们中的任何一个，但总是存在一个最优策略确定性的选择一个动作。
 
 ## 9. Bellman Equations
 
@@ -267,8 +266,8 @@ $s^{\prime}\sim P$是$s^{\prime}\sim P(\cdot|s,a)$的缩写，表示下一个状
 最优值函数的贝尔曼方程如下：
 $$
 \begin{aligned} 
-V^{*}(s)&=\underset{a}{max}\underset{s^{\prime}\sim P}{\mathrm{E}}[r(s,a,s^{\prime})+\gamma V^{*}(s^{\prime})]\\
-Q^{*}(s,a)&=\underset{s^{\prime} \sim P}{\mathrm{E}}\left[r(s,a,s^{\prime})+\underset{a^{\prime}}{max}[\gamma Q^{*}(s^{\prime},a^{\prime})]\right]
+V^{\ast}(s)&=\underset{a}{max}\underset{s^{\prime}\sim P}{\mathrm{E}}[r(s,a,s^{\prime})+\gamma V^{\ast}(s^{\prime})]\\
+Q^{\ast}(s,a)&=\underset{s^{\prime} \sim P}{\mathrm{E}}\left[r(s,a,s^{\prime})+\underset{a^{\prime}}{max}[\gamma Q^{\ast}(s^{\prime},a^{\prime})]\right]
 \end{aligned}
 $$
 在线策略值函数的贝尔曼方程和最优值函数的贝尔曼方程的关键不同在于是否有$max$操作符，这反映了智能体在选择动作时，为了最优化动作，它不得不挑选能让值最大化的动作。
@@ -276,10 +275,10 @@ $$
 > 推导：
 > $$
 > \begin{aligned} 
-> V^{*}(s)&=max_a[Q^{*}(s,a)]\\
-> &=max_a\left[E_{\pi^{*}}[r_0+\sum_{t=1}^{\infty}\gamma^tr_t|s_0=s,a_0=a]\right]\\
-> &=max_a\left[E_{s^\prime\sim p}\left[r(s,a,s^{\prime})+\gamma E_{\pi^{*}}\left[\sum_{t=0}^{\infty}\gamma^tr_{t+1}|s_1=s^{\prime}\right]\right]\right]\\
-> &=max_a\left[E_{s^\prime\sim p}[r(s,a,s^{\prime})+\gamma V^{*}(s^\prime)t]\right]\\
+> V^{\ast}(s)&=max_a[Q^{\ast}(s,a)]\\
+> &=max_a\left[E_{\pi^{\ast}}[r_0+\sum_{t=1}^{\infty}\gamma^tr_t|s_0=s,a_0=a]\right]\\
+> &=max_a\left[E_{s^\prime\sim p}\left[r(s,a,s^{\prime})+\gamma E_{\pi^{\ast}}\left[\sum_{t=0}^{\infty}\gamma^tr_{t+1}|s_1=s^{\prime}\right]\right]\right]\\
+> &=max_a\left[E_{s^\prime\sim p}[r(s,a,s^{\prime})+\gamma V^{\ast}(s^\prime)t]\right]\\
 > \end{aligned}
 > $$
 
@@ -287,8 +286,8 @@ $$
 
 > $$
 > \begin{aligned} 
-> Q^{*}(s,a)&=E_{s^\prime\sim p}\left[r(s,a,s^{\prime})+\gamma V^{*}(s^\prime)\right]\\
-> &=E_{s^\prime\sim p}\left[r(s,a,s^{\prime})+\gamma max_{a^{\prime}}[Q^{*}(s^{\prime},a^{\prime})]\right]
+> Q^{\ast}(s,a)&=E_{s^\prime\sim p}\left[r(s,a,s^{\prime})+\gamma V^{\ast}(s^\prime)\right]\\
+> &=E_{s^\prime\sim p}\left[r(s,a,s^{\prime})+\gamma max_{a^{\prime}}[Q^{\ast}(s^{\prime},a^{\prime})]\right]
 > \end{aligned}
 > $$
 
